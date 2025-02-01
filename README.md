@@ -1,6 +1,6 @@
 # btree
 
-Fast static B-trees compared against `std::lower_bound`.
+AVX-512 vectorised static b-trees benchmarked against std::lower_bound. 
 
   - [btree_eytzinger](#btree_eytzinger)
   
