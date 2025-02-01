@@ -27,7 +27,7 @@ plt.axvline(x=24, color="black", linestyle="--", alpha=0.5)
 plt.grid(True)
 plt.xlabel("Array Length (2^n)")
 plt.ylabel("Reciprocal Throughput (ns)")
-plt.title("Algorithm Performance Comparison")
+plt.title("lower_bound() comparison")
 plt.ylim(0, 250)
 plt.legend()
 
