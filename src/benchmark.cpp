@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <vector>
 
-#include "trees/btree.hpp"
+#include "trees/btree_eytzinger.hpp"
 
 constexpr u32 num_queries = (1 << 20);
 

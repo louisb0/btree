@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 #include "common.hpp"
-#include "trees/btree.hpp"
+#include "trees/btree_eytzinger.hpp"
 
 template <typename tree_type>
 void correctness() {

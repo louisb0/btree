@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 #include "common.hpp"
-#include "trees/btree.hpp"
+#include "trees/btree_eytzinger.hpp"
 
 constexpr size_t num_queries = (1 << 28);
 constexpr size_t num_elements = (1 << 28) / sizeof(int);
