@@ -2,13 +2,11 @@
 
 Fast static B-trees compared against `std::lower_bound`.
 
-## Comparisons
+  - [btree_eytzinger](#btree_eytzinger)
+  
+## Implementations
 
-### Contents
-
-- [btree_eytzinger](#btree_eytzinger)
-
-![graph](./results/plot.png)
+<img src="./results/plot.png" width="800" alt="lower_bound() comparison" />
 
 ### btree_eytzinger
 
