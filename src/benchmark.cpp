@@ -46,6 +46,6 @@ static void BM_Tree(benchmark::State& state) {
 }
 
 BENCHMARK(BM_StdLowerBound)->DenseRange(1, 30);
-BENCHMARK_TEMPLATE(BM_Tree, btree)->DenseRange(1, 30);
+BENCHMARK_TEMPLATE(BM_Tree, btree_eytzinger)->DenseRange(1, 30);
 
 BENCHMARK_MAIN();

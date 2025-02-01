@@ -1,13 +1,14 @@
 # btree
-Fast static B-trees, compared against `std::lower_bound`.
 
-> These are not direct replacements for `std::lower_bound` as they are specific to integer keys and require preprocessing of data.
-
-![graph](./results/plot.png)
+Fast static B-trees compared against `std::lower_bound`.
 
 ## Comparisons
 
-### btree
+- [btree_eytzinger](#btree_eytzinger)
+
+![graph](./results/plot.png)
+
+### btree_eytzinger
 
 This is the first of our trees. It extends the Eytzinger layout (`2k`, `2k + 1`) to B-trees which have `B + 1` children, where `B` is the number of keys in a block (16 in this case - one cache line). This outperforms `std::lower_bound` by up to 10x in terms of reciprocal throughput.
 
@@ -24,7 +25,7 @@ This is the first of our trees. It extends the Eytzinger layout (`2k`, `2k + 1`)
      1,139,807,265      branch-misses                    #   10.44% of all branches
 ```
 
-`perf` shows there is a very high percentage of branch mispredicts. It also shows exactly where we're spending our time:
+`perf` shows there is a very high percentage of branch mispredicts and more frontend stalls than we'd like. It also shows exactly where we're spending our time:
 
 ```
        │    │found = _tree[block * constants::block_len + i];                                                                                                                 
@@ -43,4 +44,4 @@ This is the first of our trees. It extends the Eytzinger layout (`2k`, `2k + 1`)
  30.96 │    └──jmp          2ad     
 ```
 
-It seems like we're struggling to predict the `while` condition while traversing the structure, which makes sense. If we knew the height in advance, we could completely remove branches and have the compiler unroll a fixed size loop.
+It seems like we're struggling to predict the `while` condition while traversing the B-tree, which makes sense. If we knew the height in advance, we could completely remove branches and have the compiler unroll a fixed size loop.

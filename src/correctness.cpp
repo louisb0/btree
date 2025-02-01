@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
     }
 
     std::string filter = argv[1];
-    if (filter.find("btree") != std::string::npos) {
-        correctness<btree>();
+    if (filter.find("btree_eytzinger") != std::string::npos) {
+        correctness<btree_eytzinger>();
     }
 
     return EXIT_SUCCESS;

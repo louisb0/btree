@@ -10,9 +10,9 @@
 #include "common.hpp"
 #include "trees/base.hpp"
 
-class btree : public tree_base {
+class btree_eytzinger : public tree_base {
 public:
-    btree(std::span<const int> data) {
+    btree_eytzinger(std::span<const int> data) {
         _nblocks = std::ceil(static_cast<f64>(data.size()) / constants::block_len);
 
         u64 bytes_required = (constants::block_len * sizeof(int)) * _nblocks;
@@ -26,7 +26,7 @@ public:
         build(data, pos);
     }
 
-    ~btree() {
+    ~btree_eytzinger() {
         std::free(_tree);
     }
 
