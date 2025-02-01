@@ -1,4 +1,5 @@
 #include <immintrin.h>
+#include <sys/mman.h>
 
 #include <climits>
 #include <cmath>
@@ -19,6 +20,7 @@ public:
 
         _tree = static_cast<int*>(
             std::aligned_alloc(constants::page_size, constants::page_size * pages_required));
+        madvise(_tree, pages_required, MADV_HUGEPAGE);
 
         size_t pos = 0;
         build(data, pos);
