@@ -57,7 +57,7 @@ A high-level profile from `perf`:
      1,139,807,265      branch-misses                    #   10.44% of all branches
 ```
 
-This shows there is a very high percentage of branch mispredicts and more frontend stalls than we'd like. It also shows exactly where we're spending our time:
+This shows there is a very high percentage of branch mispredicts, low IPC, and more frontend stalls than we'd like. It also shows exactly where we're spending our time:
 
 ```
        │    │found = _tree[block * constants::block_len + i];                                                                                                                 
