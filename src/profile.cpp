@@ -3,6 +3,7 @@
 #include <cstdlib>
 
 #include "common.hpp"
+#include "trees/bplus.hpp"
 #include "trees/btree.hpp"
 
 constexpr size_t num_queries = (1 << 28);
@@ -13,7 +14,7 @@ int main() {
     auto data = generate_random_data(num_elements);
     std::sort(data.begin(), data.end());
 
-    btree tree(data);
+    bplus<num_elements> tree(data);
 
     printf("Data prepared, profile begins.\n");
 

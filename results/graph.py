@@ -20,9 +20,20 @@ for algo in df["algo"].unique():
             label=algo,
         )
 
-plt.axvline(x=15, color="black", linestyle="--", alpha=0.5)
-plt.axvline(x=20, color="black", linestyle="--", alpha=0.5)
-plt.axvline(x=24, color="black", linestyle="--", alpha=0.5)
+annotations = {15: "L1d", 20: "L2d", 25: "L3d", 27.16: "L1d TLB"}
+
+for x, label in annotations.items():
+    plt.axvline(x=x, color="black", linestyle="--", alpha=0.5)
+    plt.annotate(
+        label,
+        xy=(x, 200),
+        xytext=(5, 0),
+        textcoords="offset points",
+        ha="left",
+        va="center",
+        fontsize=8,
+        bbox=dict(facecolor="white", edgecolor="none", alpha=0.7, pad=2),
+    )
 
 plt.grid(True)
 plt.xlabel("Array Length (2^n)")
