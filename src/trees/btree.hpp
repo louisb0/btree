@@ -10,30 +10,30 @@
 #include "common.hpp"
 #include "trees/base.hpp"
 
-class btree_eytzinger : public tree_base {
+class btree : public tree_base {
 public:
-    btree_eytzinger(std::span<const int> data) {
-        _nblocks = std::ceil(static_cast<f64>(data.size()) / constants::block_len);
+    btree(std::span<const int> data) {
+        _nblocks = (data.size() + constants::block_len - 1) / constants::block_len;
 
-        u64 bytes_required = (constants::block_len * sizeof(int)) * _nblocks;
-        u16 pages_required = std::ceil(static_cast<f64>(bytes_required) / constants::page_size);
+        size_t bytes = _nblocks * constants::block_len * sizeof(int);
+        size_t padded_bytes =
+            (bytes + constants::page_size - 1) / constants::page_size * constants::page_size;
 
-        _tree = static_cast<int*>(
-            std::aligned_alloc(constants::page_size, constants::page_size * pages_required));
-        madvise(_tree, pages_required, MADV_HUGEPAGE);
+        _tree = static_cast<int*>(std::aligned_alloc(constants::page_size, padded_bytes));
+        madvise(_tree, padded_bytes, MADV_HUGEPAGE);
 
         size_t pos = 0;
         build(data, pos);
     }
 
-    ~btree_eytzinger() {
+    ~btree() {
         std::free(_tree);
     }
 
     int lower_bound(int target) const noexcept {
         int found = 0;
 
-        u32 block = 0;
+        size_t block = 0;
         while (block < _nblocks) {
             int i = first_ge(target, &_tree[block * constants::block_len]);
             if (i < constants::block_len) {
@@ -48,9 +48,9 @@ public:
 
 private:
     int* _tree;
-    u32 _nblocks;
+    size_t _nblocks;
 
-    void build(std::span<const int> data, size_t& pos, u32 block = 0) {
+    void build(std::span<const int> data, size_t& pos, size_t block = 0) {
         if (block < _nblocks) {
             for (int i = 0; i < constants::block_len; i++) {
                 build(data, pos, child(block, i));
@@ -63,8 +63,8 @@ private:
         }
     }
 
-    u32 child(u32 block, u16 offset) const {
-        u32 child_block = 1 + block * (constants::block_len + 1);
+    size_t child(size_t block, size_t offset) const {
+        size_t child_block = 1 + block * (constants::block_len + 1);
         return child_block + offset;
     }
 

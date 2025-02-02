@@ -4,11 +4,11 @@
 #include <cstdio>
 #include <vector>
 
-#include "trees/btree_eytzinger.hpp"
+#include "trees/btree.hpp"
 
-constexpr u32 num_queries = (1 << 20);
+constexpr size_t num_queries = (1 << 28);
 
-static void BM_StdLowerBound(benchmark::State& state) {
+static void BM_lower_bound(benchmark::State& state) {
     const size_t power = state.range(0);
     const size_t elements = (1 << power) / sizeof(int);
 
@@ -25,8 +25,7 @@ static void BM_StdLowerBound(benchmark::State& state) {
     }
 }
 
-template <typename tree_type>
-static void BM_Tree(benchmark::State& state) {
+static void BM_btree(benchmark::State& state) {
     const size_t power = state.range(0);
     const size_t elements = (1 << power) / sizeof(int);
 
@@ -36,7 +35,7 @@ static void BM_Tree(benchmark::State& state) {
     static const auto queries = generate_random_data(num_queries);
     static size_t query_idx = 0;
 
-    tree_type tree(data);
+    btree tree(data);
 
     for (auto _ : state) {
         int query = queries[query_idx++ & (num_queries - 1)];
@@ -45,7 +44,7 @@ static void BM_Tree(benchmark::State& state) {
     }
 }
 
-BENCHMARK(BM_StdLowerBound)->DenseRange(1, 30);
-BENCHMARK_TEMPLATE(BM_Tree, btree_eytzinger)->DenseRange(1, 30);
+BENCHMARK(BM_lower_bound)->DenseRange(1, 30);
+BENCHMARK(BM_btree)->DenseRange(1, 30);
 
 BENCHMARK_MAIN();

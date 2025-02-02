@@ -5,7 +5,7 @@ df = pd.read_csv("data.csv")
 
 df["name"] = df["name"].str.replace("BM_", "")
 df["size"] = df["name"].str.extract("/(\d+)").astype(int)
-df["algo"] = df["name"].str.extract("([^/]+)/")
+df["algo"] = df["name"].str.extract("(.*?)/")[0]
 
 plt.figure(figsize=(6, 4), dpi=300)
 

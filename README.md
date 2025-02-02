@@ -2,13 +2,13 @@
 
 AVX-512 vectorised static b-trees benchmarked against std::lower_bound. 
 
-  - [btree_eytzinger](#btree_eytzinger)
+  - [btree](#btree_first)
   
 ## Implementations
 
 <img src="./results/plot.png" width="800" alt="lower_bound() comparison" />
 
-### btree_eytzinger
+### btree_first
 
 This is the first of our trees. It extends the Eytzinger layout (`2k`, `2k + 1`) to B-trees which have `B + 1` children, where `B` is the number of keys in a block (16 in this case - one cache line). This outperforms `std::lower_bound` by up to 10x in terms of reciprocal throughput.
 
@@ -76,4 +76,4 @@ This shows there is a very high percentage of branch mispredicts, low IPC, and m
  30.96 │    └──jmp          2ad     
 ```
 
-It seems like we're struggling to predict the `while` condition while traversing the B-tree. If we knew the height in advance then we could completely remove branches and have the compiler unroll a fixed size loop, addressing this bottleneck.
+It seems like we're struggling to predict the `while` condition while traversing the B-tree. If we knew the height in advance then we could completely remove branches and have the compiler unroll a fixed size loop, addressing this bottleneck. A B+ tree is perfect for this; our target will always be a leaf node, meaning we can compute at compile-time exactly how many iterations of the loop we need to run.

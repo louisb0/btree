@@ -1,18 +1,18 @@
-.PHONY: all clean rebuild benchmark correctness profiling
+.PHONY: all clean rebuild benchmark correctness profile
 
-all: benchmark correctness profiling
+all: bench test profile
 
-benchmark:
+bench:
 	mkdir -p build
-	cd build && cmake .. && cmake --build . --target benchmark
+	cd build && cmake .. && cmake --build . --target bench
 
-correctness:
+test:
 	mkdir -p build
-	cd build && cmake .. && cmake --build . --target correctness
+	cd build && cmake .. && cmake --build . --target test 
 
-profiling:
+profile:
 	mkdir -p build
-	cd build && cmake .. && cmake --build . --target profiling
+	cd build && cmake .. && cmake --build . --target profile
 
 clean:
 	rm -rf build
