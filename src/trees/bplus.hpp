@@ -20,7 +20,7 @@ private:
     }
 
     static constexpr int parent_layer_keys(int num_keys) {
-        // parent_size = ceil(blocks_on_layer / children_per_block)
+        // parent_size = ceil(blocks_on_layer / children_per_block) * block_len
         return (block_count(num_keys) + constants::block_len) / (constants::block_len + 1) *
                constants::block_len;
     }
@@ -92,10 +92,10 @@ private:
                 int block = i / constants::block_len;
                 int block_key_offset = i - block * constants::block_len;
 
-                int child_layer_start = block * (constants::block_len + 1);
-                int right_child_block = (child_layer_start + block_key_offset) + 1;
+                int block_offset_on_new_layer = block * (constants::block_len + 1);
+                int right_key_offset = (block_offset_on_new_layer + block_key_offset) + 1;
 
-                int leftmost_block = right_child_block;
+                int leftmost_block = right_key_offset;
                 for (size_t l = 0; l < h - 1; l++) {
                     leftmost_block *= (constants::block_len + 1);
                 }
