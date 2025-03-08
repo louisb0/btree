@@ -9,10 +9,9 @@
 #include <span>
 
 #include "common.hpp"
-#include "trees/base.hpp"
 
 template <size_t N>
-class bplus : public tree_base {
+class bplus {
 private:
     static constexpr int block_count(int num_keys) {
         // block_count = ceil(num_keys / block_length)

@@ -8,9 +8,8 @@
 #include <span>
 
 #include "common.hpp"
-#include "trees/base.hpp"
 
-class btree : public tree_base {
+class btree {
 public:
     btree(std::span<const int> data) {
         _nblocks = (data.size() + constants::block_len - 1) / constants::block_len;
