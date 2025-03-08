@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -35,6 +37,19 @@ std::vector<int> read_or_generate(const char* filename, size_t count, bool shoul
 }
 
 int main() {
+    if (nice(-20) == -1) {
+        perror("nice()");
+        return EXIT_FAILURE;
+    }
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(0, &cpuset);
+    if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset) != 0) {
+        perror("pthread_setaffinity_np()");
+        return EXIT_FAILURE;
+    }
+
     auto queries = read_or_generate("data/queries.bin", num_queries);
     auto data = read_or_generate("data/data.bin", num_elements, true);
 
