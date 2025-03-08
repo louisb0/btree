@@ -151,7 +151,7 @@ We're struggling to predict the while condition more than anything else. If we k
 
 A B+ tree has an added idea of internal and data nodes. It is essentially a complete tree where the leaves of the tree contain the actual data. So, we just need to iterate a fixed number (the tree height) of levels and then read that final block. This implementation outperforms the previous by up to 30%.
 
-```
+```cpp
 int lower_bound(int target) const noexcept {
     int k = 0;
 
@@ -212,7 +212,7 @@ Well, we're already measuring throughput. What if we allowed the implementation 
 
 See just above for the idea, but, this is where things get really fast. Here, we can run a lower bound query on 1GiB of data in 38ns. That's a 40x speed up over `std::lower_bound()`.
 
-```
+```cpp
 void lower_bound_batch(const int* queries, int* results) const noexcept {
     int positions[B]{};
 
