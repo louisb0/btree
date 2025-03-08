@@ -1,15 +1,18 @@
 # btrees
 
-AVX-512 vectorised static b-trees benchmarked against std::lower_bound. 
+40x faster AVX-512 vectorised static b-trees benchmarked against std::lower_bound. 
 
   - [btree](#btree)
   - [bplus](#bplus)
-  
+  - [batching_bplus](#bplus)
+
+The below is intended to be read top down and explains how we derive each optimisation. Of course, use the links above to jump to what you find interesting :)
+
 ## Implementations
 
 <img src="./results/plot.png" width="800" alt="lower_bound() comparison" />
 
-We will cover a few implementations below. For each one we will present a profile from `perf` on a dataset of 64MB (see [src/profile.cpp](./src/profile.cpp) and [profile.sh](./profile.sh)). The cache based information is not so helpful at this data set size. It would be better to provide profiles within L1, L2, L3, RAM, etc., but the fans on my PC are broken and I have an actual industrial fan pointed at my laptop whilst profiling and benchmarking :)
+We will cover a few implementations below. For each one we will present a profile from `perf` on a dataset of 64MB (see [src/profile.cpp](./src/profile.cpp) and [profile.sh](./profile.sh)). The cache based information is not so helpful at this data set size. It would be better to provide profiles within L1, L2, L3, RAM, etc., but the fans on my PC are broken and I need to point an industrial fan at my laptop for every benchmark...
 
 It is worth noting this is all done on the AMD Zen4 microarchitecture which has:
 
@@ -196,10 +199,75 @@ I'm wary of the cache misses and TLB misses. I think this is more to do with the
 
 An interesting note is that our IPC dropped from 0.27 to 0.21. Counterintuitively, this is a good thing. The IPC was higher previously because we were issuing more instructions overall, and those instructions run on execution ports which are independent of those which are executing our AVX-512 instructions. That artificially drove up our IPC, because we were parallelising useless overhead with our 'actual' work. 
 
-### How do we go faster?
+#### How do we go faster?
 
 I'm not sure how much of those cache / TLB misses are the profiling harness, but, that seems to be the bottleneck.
 
 The typical solution is to prefetch and tell the CPU we need that data soon, so, get it ready. There's a caveat however; prefetching is only effective if you have other work to do while you wait for your data to be fetched in the background. That's not true for us. We do the work to figure out where to go, then we need to go there immediately. There's nothing to overlap.
 
 Well, we're already measuring throughput. What if we allowed the implementation to leverage that? What if we moved those many queries into our core lower bound loop? What if, instead of immediately 'going there', we prefetch, then overlap that work figuring out where we need to go for another query, prefetch, and so on? *Batching is the answer.*
+
+
+### batching_bplus
+
+See just above for the idea, but, this is where things get really fast. Here, we can run a lower bound query on 1GiB of data in 38ns. That's a 40x speed up over `std::lower_bound()`.
+
+```
+void lower_bound_batch(const int* queries, int* results) const noexcept {
+    int positions[B]{};
+
+    __m512i targets[B];
+    for (size_t i = 0; i < B; i++) {
+        targets[i] = _mm512_set1_epi32(queries[i]);
+    }
+
+    for (int h = num_layers - 1; h > 0; h--) {
+        for (size_t i = 0; i < B; i++) {
+            int k = positions[i];
+
+            int key_i = first_ge(targets[i], _tree + offset(h) + k * constants::block_len);
+            positions[i] = k * (constants::block_len + 1) + key_i;
+
+            int* next_block = _tree + offset(h - 1) + positions[i] * constants::block_len;
+            _mm_prefetch(reinterpret_cast<const char*>(next_block), _MM_HINT_T0);
+        }
+    }
+
+    for (size_t i = 0; i < B; i++) {
+        int* leaf_block = _tree + positions[i] * constants::block_len;
+        results[i] = leaf_block[first_ge(targets[i], leaf_block)];
+    }
+}
+```
+
+All we do is hold an array of positions into the next layer we'll look at, initially zero for the root node. We then work our way through the tree, and for each batch, compute where we need to go on the next layer. We'll update our position, then load that cache line into L1 with `_MM_HINT_T0`. When we revisit this query in the batch we won't need to wait on main memory; it's already there.
+
+Customary `perf` output with a batch size of 64:
+
+```
+          7,206.46 msec task-clock                       #    1.000 CPUs utilized
+                24      context-switches                 #    3.330 /sec
+                 0      cpu-migrations                   #    0.000 /sec
+                 5      page-faults                      #    0.694 /sec
+    35,233,287,284      cycles                           #    4.889 GHz                         (45.45%)
+     1,534,689,292      stalled-cycles-frontend          #    4.36% frontend cycles idle        (45.46%)
+    62,889,785,198      instructions                     #    1.78  insn per cycle
+                                                  #    0.02  stalled cycles per insn     (45.47%)
+    12,435,640,167      branches                         #    1.726 G/sec                       (45.47%)
+       136,540,875      branch-misses                    #    1.10% of all branches             (45.47%)
+     1,194,403,357      cache-references                 #  165.741 M/sec                       (45.46%)
+       593,607,772      cache-misses                     #   49.70% of all cache refs           (45.45%)
+    12,787,600,737      L1-dcache-loads                  #    1.774 G/sec                       (45.44%)
+     1,085,507,013      L1-dcache-load-misses            #    8.49% of all L1-dcache accesses   (45.44%)
+       134,275,834      dTLB-loads                       #   18.633 M/sec                       (45.44%)
+            39,816      dTLB-load-misses                 #    0.03% of all dTLB cache accesses  (45.44%)
+
+       7.207235275 seconds time elapsed
+
+       9.050222000 seconds user
+       0.155986000 seconds sys
+```
+
+9 seconds runtime is pretty great; that's twice as fast as our last one. We can see `L1-dcache-load-misses` dropped down to 8.49% from the previous 28.13%, which is a massive reduction. I'm not sure where the 50% cache misses (which are consistent across all these profiles) are coming from, but, I'd assume it's a test harness thing.
+
+Our IPC also shot up significantly to 1.78 from 0.21, but note also that our total instructions increased from 20B to 63B. As previously explained, this increase is largely explained by the parallelising the extra scalar instructions from batching, which run in parallel with our AVX-512 instructions.

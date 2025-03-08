@@ -11,12 +11,12 @@ plt.figure(figsize=(6, 4), dpi=300)
 
 for algo in df["algo"].unique():
     data = df[df["algo"] == algo]
-    if algo == "StdLowerBound":
-        plt.plot(data["size"], data["cpu_time"], label=algo, alpha=0.2)
+    if algo == "lower_bound":
+        plt.plot(data["size"], data["time_per_query"] * 1e9, label=algo, alpha=0.2)
     else:
         plt.plot(
             data["size"],
-            data["cpu_time"],
+            data["time_per_query"] * 1e9,
             label=algo,
         )
 
