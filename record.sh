@@ -1,2 +1,4 @@
+#!/bin/bash
+
 make profile
-perf record --delay 2000 ./build/profile
+sudo perf record --delay 2000 ./build/profile
